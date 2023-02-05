@@ -151,10 +151,7 @@ class NotesView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final route = MaterialPageRoute(
-            builder: (context) => const AddNoteView(),
-          );
-          Navigator.of(context).push(route);
+          Navigator.of(context).pushNamed(AddNoteView.routePath);
         },
         child: Icon(Icons.add),
       ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'modules/main/view/main_page.dart';
+import 'package:flutter_notes_app/modules/auth/controllers/auth_controller.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:provider/provider.dart';
+import 'modules/splash/controllers/splash_controller.dart';
+import 'routers/app_router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,8 +15,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MainPage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => SplashController()),
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        initialRoute: '/',
+        onGenerateRoute: AppRouter.generateRoute,
+        builder: (context, child) {
+          return GlobalLoaderOverlay(
+            overlayColor: Colors.black.withOpacity(0.5),
+            child: child!,
+          );
+        },
+      ),
     );
   }
 }

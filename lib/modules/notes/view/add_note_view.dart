@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 class AddNoteView extends StatefulWidget {
   const AddNoteView({Key? key}) : super(key: key);
 
+
+  static const routePath = '/notes/add';
+
   @override
   _AddNoteViewState createState() => _AddNoteViewState();
 }

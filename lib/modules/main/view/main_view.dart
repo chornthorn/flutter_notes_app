@@ -4,14 +4,14 @@ import 'package:flutter_notes_app/modules/notes/view/notes_view.dart';
 import '../../home/view/home_view.dart';
 import '../../settings/view/settings_view.dart';
 
-class MainPage extends StatefulWidget {
-  const MainPage({Key? key}) : super(key: key);
+class MainView extends StatefulWidget {
+  const MainView({Key? key}) : super(key: key);
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<MainView> createState() => _MainViewState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainViewState extends State<MainView> {
 
 
   final List<Widget> _pages = [
