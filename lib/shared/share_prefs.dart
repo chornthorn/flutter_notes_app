@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert' as convert;
 
 class SharedPrefs {
   // get instance
@@ -28,6 +29,16 @@ class SharedPrefs {
   static Future<bool> setBool(String key, bool value) async {
     final prefs = await _instance;
     return prefs.setBool(key, value);
+  }
+
+  // encode map to string
+  static String encodeMapToString(Map<String, dynamic> value) {
+    return convert.jsonEncode(value);
+  }
+
+  // decode string to map
+  static Map<String, dynamic> decodeStringToMap(String value) {
+    return convert.jsonDecode(value);
   }
 
   // clear

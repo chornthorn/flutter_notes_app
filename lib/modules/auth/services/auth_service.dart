@@ -1,33 +1,53 @@
 import 'package:flutter_notes_app/data/local_database.dart';
+import 'package:flutter_notes_app/modules/auth/models/user_model.dart';
 
 class AuthService {
   final LocalDatabase _localDatabase;
 
   AuthService(this._localDatabase);
 
-  Future<bool> login(String username, String password) async {
-    var users = await _localDatabase.query('user');
-    var user = users.firstWhere(
-      (user) => user['username'] == username && user['password'] == password,
-      orElse: () => {},
+  Future<UserModel> login(String email, String password) async {
+    var user = await _localDatabase.queryOneBy(
+      UserModel.TABLE_NAME,
+      UserModel.EMAIL,
+      email,
     );
-    return user.isNotEmpty;
+
+    if (user.isEmpty) throw Exception('User not found');
+
+    final UserModel userModel = UserModel.fromMap(user);
+
+    if (userModel.password != password) throw Exception('Wrong password');
+
+    return userModel;
   }
 
-  Future<bool> register(
-      String name, String email, String username, String password) async {
-    var users = await _localDatabase.query('user');
-    var user = users.firstWhere(
-      (user) => user['username'] == username,
-      orElse: () => {},
-    );
-    if (user.isNotEmpty) return false;
-    await _localDatabase.insert('user', {
-      'name': name,
-      'email': email,
-      'username': username,
-      'password': password,
-    });
-    return true;
+  Future<UserModel> register(UserModel userReqModel) async {
+    try {
+      // check if user already exists
+      var user = await _localDatabase.queryOneBy(
+        UserModel.TABLE_NAME, // table name
+        UserModel.EMAIL, // column name
+        userReqModel.email, // value
+      );
+
+      print(user);
+
+      if (user.isNotEmpty) throw Exception('User already exists');
+
+      // insert user
+      var id = await _localDatabase.insert(
+          UserModel.TABLE_NAME, userReqModel.toMap());
+
+      if (id == 0) {
+        throw Exception('Failed to register');
+      }
+
+      userReqModel.id = id;
+      return userReqModel;
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Failed to register');
+    }
   }
 }

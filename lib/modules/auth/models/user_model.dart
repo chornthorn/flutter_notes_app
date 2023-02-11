@@ -10,15 +10,15 @@ class UserModel {
   static const String TABLE_NAME = 'user';
 
   // user properties
-  late int id;
-  late String name;
+  late int? id;
+  late String? name;
   late String email;
   late String password;
   late String? phone;
 
   UserModel({
-    required this.id,
-    required this.name,
+    this.id,
+    this.name,
     required this.email,
     required this.password,
     this.phone,
@@ -35,8 +35,7 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     final data = <String, dynamic>{};
-    data[ID] = id;
-    data[NAME] = name;
+    data[NAME] = name; // data['name'] = name;
     data[EMAIL] = email;
     data[PASSWORD] = password;
     data[PHONE] = phone;

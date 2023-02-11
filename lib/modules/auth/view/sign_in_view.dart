@@ -29,14 +29,17 @@ class _SignInViewState extends State<SignInView> {
   }
 
   void _onAuthenticationChanged() {
-    if (_authController.isAuthenticated) {
+    if (_authController.isAuthenticated && !_authController.isLoading) {
       Navigator.of(context).pushReplacementNamed('/main');
     }
   }
 
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
-      Provider.of<AuthController>(context, listen: false).signIn();
+      _authController.signIn(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -125,6 +128,20 @@ class _SignInViewState extends State<SignInView> {
                       },
                       child: const Text('Sign In'),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Don\'t have an account?'),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context)
+                              .pushReplacementNamed('/sign_up');
+                        },
+                        child: const Text('Sign Up'),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -7,7 +7,7 @@ class SplashController extends ChangeNotifier {
 
   Future<void> init() async {
     // TODO: Initialize your app here
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 1));
     _isInitialized = true;
     notifyListeners();
   }
