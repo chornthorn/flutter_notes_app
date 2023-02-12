@@ -20,7 +20,7 @@ class LocalDatabase {
     return _database;
   }
 
-  static const int _version = 4;
+  static const int _version = 1;
 
   _initDatabase() async {
     var documentsDirectory = await getApplicationDocumentsDirectory();

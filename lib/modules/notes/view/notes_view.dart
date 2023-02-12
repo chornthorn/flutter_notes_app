@@ -43,12 +43,6 @@ class _NotesViewState extends State<NotesView> {
                 );
               }
 
-              if (noteController.errorMessages.isNotEmpty) {
-                return Center(
-                  child: Text(noteController.errorMessages),
-                );
-              }
-
               if (noteController.notes.isEmpty) {
                 return const Center(
                   child: Text('No notes found'),

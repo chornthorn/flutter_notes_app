@@ -18,9 +18,20 @@ class NoteController with ChangeNotifier {
 
   String get errorMessages => _errorMessages;
 
-  final _notes = <NoteModel>[];
+  var _notes = <NoteModel>[];
 
   List<NoteModel> get notes => _notes;
+
+
+  NoteStatus _noteStatus = NoteStatus.draft;
+  NoteStatus get noteStatus => _noteStatus;
+  set noteStatus(NoteStatus noteStatus) {
+    _noteStatus = noteStatus;
+    notifyListeners();
+  }
+
+  CreateNoteStatus _createNoteStatus = CreateNoteStatus.initial;
+  CreateNoteStatus get createNoteStatus => _createNoteStatus;
 
   // read
   Future<void> getAll() async {
@@ -39,17 +50,14 @@ class NoteController with ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       _errorMessages = e.toString();
+      _notes = [];
       notifyListeners();
 
-      print(e.toString());
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
-
-  CreateNoteStatus _createNoteStatus = CreateNoteStatus.initial;
-  CreateNoteStatus get createNoteStatus => _createNoteStatus;
 
   // create
   Future<void> create(NoteModel noteModel) async {
@@ -87,6 +95,8 @@ class NoteController with ChangeNotifier {
     notifyListeners();
 
     try {
+      final currentDate = DateTime.now();
+      noteModel.updatedAt = currentDate.toString();
       final note = await _noteService.update(noteModel);
       final index = _notes.indexWhere((element) => element.id == note.id);
       _notes[index] = note;
@@ -125,13 +135,4 @@ class NoteController with ChangeNotifier {
       notifyListeners();
     }
   }
-
-
-  NoteStatus _noteStatus = NoteStatus.draft;
-  NoteStatus get noteStatus => _noteStatus;
-  set noteStatus(NoteStatus noteStatus) {
-    _noteStatus = noteStatus;
-    notifyListeners();
-  }
-
 }
