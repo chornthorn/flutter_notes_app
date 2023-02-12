@@ -50,7 +50,6 @@ class NoteController with ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       _errorMessages = e.toString();
-      _notes = [];
       notifyListeners();
 
     } finally {
