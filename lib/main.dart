@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_notes_app/modules/auth/controllers/auth_controller.dart';
+import 'package:flutter_notes_app/modules/notes/controllers/note_controller.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:provider/provider.dart';
 import 'modules/splash/controllers/splash_controller.dart';
 import 'routers/app_router.dart';
+import 'package:flutter_notes_app/data/local_database.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalDatabase().database;
   runApp(const MyApp());
 }
 
@@ -19,6 +22,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => SplashController()),
+        ChangeNotifierProvider(create: (_) => NoteController()),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',

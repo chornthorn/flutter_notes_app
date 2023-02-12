@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_notes_app/modules/notes/controllers/note_controller.dart';
+import 'package:flutter_notes_app/modules/notes/models/note_enum.dart';
+import 'package:provider/provider.dart';
 
-// Add note form view with validation
+import '../models/note_model.dart';
+
 class AddNoteView extends StatefulWidget {
   const AddNoteView({Key? key}) : super(key: key);
-
 
   static const routePath = '/notes/add';
 
@@ -12,9 +15,41 @@ class AddNoteView extends StatefulWidget {
 }
 
 class _AddNoteViewState extends State<AddNoteView> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late NotePriority _priority;
+  late NoteStatus _status;
+  late NoteController _noteController;
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late GlobalKey<FormState> _formKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _priority = NotePriority.low;
+    _status = NoteStatus.draft;
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _formKey = GlobalKey<FormState>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _noteController = context.read<NoteController>();
+      _noteController.addListener(_onCreateNotes);
+    });
+  }
+
+  //_onCreateNotes
+  void _onCreateNotes() {
+    if (_noteController.createNoteStatus == CreateNoteStatus.success) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _noteController.removeListener(_onCreateNotes);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,21 +90,90 @@ class _AddNoteViewState extends State<AddNoteView> {
               },
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Processing data'),
+            DropdownButtonFormField<NotePriority>(
+              decoration: const InputDecoration(
+                labelText: 'Priority',
+                border: OutlineInputBorder(),
+              ),
+              items: NotePriority.values
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e.name),
                     ),
-                  );
-                }
+                  )
+                  .toList(),
+              onChanged: (value) {
+                _priority = value!;
               },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select a priority';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            // radio button
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Status: '),
+                ...NoteStatus.values
+                    .map(
+                      (e) => Row(
+                        children: [
+                          Consumer(
+                            builder: (_, NoteController noteController, __) {
+                              return Expanded(
+                                child: RadioListTile<NoteStatus>(
+                                  title: Text(e.name),
+                                  value: e,
+                                  groupValue: noteController.noteStatus,
+                                  onChanged: (value) {
+                                    print(value);
+                                    noteController.noteStatus = value!;
+                                    _status = value;
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                    .toList(),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _onSubmit,
               child: const Text('Submit'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  // on submit
+  void _onSubmit() {
+    if (_formKey.currentState!.validate()) {
+      final noteModel = NoteModel(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        priority: _priority.name,
+        status: _status.name,
+      );
+
+      _noteController.create(noteModel);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all the fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

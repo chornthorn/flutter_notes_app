@@ -63,8 +63,7 @@ class AuthController extends ChangeNotifier {
       // save user to shared prefs
       final userInfo = user.toMap();
       final userStringJson = SharedPrefs.encodeMapToString(userInfo);
-      final saveSuccess =
-          await SharedPrefs.setString(kUserInfoKey, userStringJson);
+      final saveSuccess = await SharedPrefs.setString(kUserInfoKey, userStringJson);
 
       if (!saveSuccess) {
         _errorMessage = 'Failed to save user info';

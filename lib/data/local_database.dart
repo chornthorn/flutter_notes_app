@@ -3,6 +3,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' show join;
 
+import '../modules/notes/models/note_model.dart';
+
 class LocalDatabase {
   static final LocalDatabase _instance = LocalDatabase._internal();
 
@@ -18,10 +20,17 @@ class LocalDatabase {
     return _database;
   }
 
+  static const int _version = 4;
+
   _initDatabase() async {
     var documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "database.db");
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: _version,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future _onCreate(Database db, int version) async {
@@ -32,16 +41,33 @@ class LocalDatabase {
         '${UserModel.PASSWORD} TEXT NULL, '
         '${UserModel.PHONE} TEXT NULL '
         ' ); '
-        ' CREATE TABLE IF NOT EXISTS notes ( '
-        'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-        ')'
+    );
+
+    await db.execute(' CREATE TABLE IF NOT EXISTS ${NoteModel.TABLE_NAME} ( '
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+        '${NoteModel.TITLE} TEXT NULL, '
+        '${NoteModel.DESCRIPTION} TEXT NULL, '
+        '${NoteModel.PRIORITY} TEXT NULL, '
+        '${NoteModel.STATUS} TEXT NULL, '
+        '${NoteModel.CREATED_AT} TEXT NULL, '
+        '${NoteModel.UPDATED_AT} TEXT NULL '
+        ' ); '
     );
   }
 
-  Future<int> insert(String table, Map<String, dynamic> row) async {
+  // on upgrade database
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < newVersion) {
+     // user table doesn't delete on upgrade
+      print('on upgrade database');
+      await _onCreate(db, newVersion);
+    }
+  }
+
+  Future<int> insert({required String table,required Map<String, dynamic> data}) async {
     Database? db = await database;
     print(db);
-    return await db!.insert(table, row);
+    return await db!.insert(table, data);
   }
 
   Future<List<Map<String, dynamic>>> query(String table) async {
@@ -63,7 +89,7 @@ class LocalDatabase {
 
   // query find one by column name
   Future<Map<String, dynamic>> queryOneBy(
-      String table, String columnName, String value) async {
+      String table, String columnName, dynamic value) async {
     Database? db = await database;
     final result = await db!.query(
       table,
@@ -78,14 +104,34 @@ class LocalDatabase {
     }
   }
 
-  Future<int> update(String table, Map<String, dynamic> row) async {
+  Future<int> update(
+      {required String table,
+      required int id,
+      required Map<String, dynamic> data}) async {
     Database? db = await database;
-    int id = row['id'];
-    return await db!.update(table, row, where: 'id = ?', whereArgs: [id]);
+    int id = data['id'];
+    return await db!.update(table, data, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<int> delete(String table, int id) async {
+  // update one by column name
+  Future<int> updateOneBy(String table, String columnName, dynamic value,
+      Map<String, dynamic> row) async {
+    Database? db = await database;
+    return await db!
+        .update(table, row, where: '$columnName = ?', whereArgs: [value]);
+  }
+
+  Future<int> delete({required String table,required int id}) async {
     Database? db = await database;
     return await db!.delete(table, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // query all records with pagination (page,perPage)
+  Future<List<Map<String, dynamic>>> queryAllWithPagination(
+      String table, int page,
+      {int perPage = 20}) async {
+    Database? db = await database;
+    int offset = (page - 1) * perPage;
+    return await db!.query(table, limit: perPage, offset: offset);
   }
 }

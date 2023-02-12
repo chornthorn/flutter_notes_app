@@ -37,7 +37,9 @@ class AuthService {
 
       // insert user
       var id = await _localDatabase.insert(
-          UserModel.TABLE_NAME, userReqModel.toMap());
+        table: UserModel.TABLE_NAME,
+        data: userReqModel.toMap(),
+      );
 
       if (id == 0) {
         throw Exception('Failed to register');
@@ -48,6 +50,45 @@ class AuthService {
     } catch (e) {
       print(e.toString());
       throw Exception('Failed to register');
+    }
+  }
+
+  // change password
+  Future<bool> changePassword(
+      int userId, String oldPassword, String newPassword) async {
+    try {
+      // check if user already exists
+      var user = await _localDatabase.queryOneBy(
+        UserModel.TABLE_NAME, // table name
+        UserModel.ID, // column name
+        userId, // value
+      );
+
+      print(user);
+
+      if (user.isEmpty) throw Exception('User not found');
+
+      final UserModel userModel = UserModel.fromMap(user);
+
+      if (userModel.password != oldPassword) throw Exception('Wrong password');
+
+      // update password
+      var result = await _localDatabase.update(
+        table: UserModel.TABLE_NAME,
+        data: {
+          UserModel.PASSWORD: newPassword, // { column: value }
+        },
+        id: userId,
+      );
+
+      if (result == 0) {
+        throw Exception('Failed to change password');
+      }
+
+      return true;
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Failed to change password');
     }
   }
 }

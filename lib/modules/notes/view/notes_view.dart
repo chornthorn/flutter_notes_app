@@ -1,160 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_notes_app/modules/notes/controllers/note_controller.dart';
 import 'package:flutter_notes_app/modules/notes/view/add_note_view.dart';
+import 'package:provider/provider.dart';
 
-class NotesView extends StatelessWidget {
+import 'note_item_card.dart';
+
+class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
 
   @override
+  State<NotesView> createState() => _NotesViewState();
+}
+
+class _NotesViewState extends State<NotesView> {
+
+  late NoteController _noteController;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _noteController = context.read<NoteController>();
+      _noteController.getAll();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notes'),
-      ),
-      body: ListView.builder(
-        itemCount: 10,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Flutter Notes App',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Flutter Notes App is a simple notes app built with Flutter',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      'Date: ${DateTime.now()}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Time: ${DateTime.now().hour}:${DateTime.now().minute}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Priority: ',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: const Text('High',
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 8),
-                    Row(
-                      children: [
-                        Text(
-                          'Status: ',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: const Text('Done',
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        final route = MaterialPageRoute(
-                          builder: (context) => const AddNoteView(),
-                        );
-                        Navigator.of(context).push(route);
-                      },
-                      child: const Text('Edit'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // alert confirm dialog
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Delete Note'),
-                              content: const Text(
-                                  'Are you sure you want to delete this note?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Delete'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed(AddNoteView.routePath);
-        },
-        child: Icon(Icons.add),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await _noteController.getAll();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Notes'),
+        ),
+        body: Consumer(
+            builder: (context, NoteController noteController, child) {
+              if (noteController.isLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (noteController.errorMessages.isNotEmpty) {
+                return Center(
+                  child: Text(noteController.errorMessages),
+                );
+              }
+
+              if (noteController.notes.isEmpty) {
+                return const Center(
+                  child: Text('No notes found'),
+                );
+              }
+
+              return ListView.builder(
+                itemCount: noteController.notes.length,
+                itemBuilder: (context, index) {
+                  final note = noteController.notes[index];
+                  return NoteItemCard(
+                    note: note,
+                  );
+                },
+              );
+            }
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).pushNamed(AddNoteView.routePath);
+          },
+          child: Icon(Icons.add),
+        ),
       ),
     );
   }
 }
+
+
